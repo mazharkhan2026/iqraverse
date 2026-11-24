@@ -1,0 +1,848 @@
+openapi: 3.1.0
+info:
+  title: IqraVerse initial API contract
+  version: 0.1.0
+  description: Draft for team review; first vertical slices only. Browser refresh
+    cookie vs mobile token determined server-side by client transport; no token in
+    browser JSON. Recovery, course, admin and complete source review contracts to
+    be added before those slices.
+servers:
+- url: http://localhost:3001/api/v1
+security:
+- bearerAuth: []
+paths:
+  /health:
+    get:
+      summary: GET /health
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security: []
+  /auth/register:
+    post:
+      summary: POST /auth/register
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+  /auth/login:
+    post:
+      summary: POST /auth/login
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+  /auth/refresh:
+    post:
+      summary: POST /auth/refresh
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Refresh'
+  /auth/logout:
+    post:
+      summary: POST /auth/logout
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Refresh'
+  /me:
+    get:
+      summary: GET /me
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /exams/variants:
+    get:
+      summary: GET /exams/variants
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Variant'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /exams/variants/{variantId}/subjects:
+    get:
+      summary: GET /exams/variants/{variantId}/subjects
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subject'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: variantId
+        in: path
+        required: true
+        schema: &id001
+          type: string
+          format: uuid
+  /exams/variants/{variantId}/blueprints:
+    get:
+      summary: GET /exams/variants/{variantId}/blueprints
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Blueprint'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: variantId
+        in: path
+        required: true
+        schema: *id001
+  /attempts/custom:
+    post:
+      summary: POST /attempts/custom
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BuildQuiz'
+  /attempts/mock:
+    post:
+      summary: POST /attempts/mock
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartMock'
+  /attempts/{attemptId}:
+    get:
+      summary: GET /attempts/{attemptId}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema: *id001
+  /attempts/{attemptId}/answers/{itemId}:
+    put:
+      summary: PUT /attempts/{attemptId}/answers/{itemId}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema: *id001
+      - name: itemId
+        in: path
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Answer'
+  /attempts/{attemptId}/submit:
+    post:
+      summary: Finalize once; repeated calls return same result
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema: *id001
+  /attempts/{attemptId}/result:
+    get:
+      summary: GET /attempts/{attemptId}/result
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema: *id001
+  /progress/{variantId}:
+    get:
+      summary: GET /progress/{variantId}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Progress'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: variantId
+        in: path
+        required: true
+        schema: *id001
+      - name: mode
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - practice
+          - mock
+          - course
+          - all
+  /attempts:
+    get:
+      summary: GET /attempts
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Result'
+                  nextCursor:
+                    type:
+                    - string
+                    - 'null'
+                required:
+                - items
+                - nextCursor
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: variantId
+        in: query
+        required: true
+        schema: *id001
+      - name: mode
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - practice
+          - mock
+          - course
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+      required:
+      - code
+      - message
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - ok
+      required:
+      - status
+    User:
+      type: object
+      properties:
+        id: *id001
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+            enum:
+            - student
+            - instructor
+            - admin
+      required:
+      - id
+      - email
+      - displayName
+      - roles
+    Login:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+      required:
+      - email
+      - password
+    Register:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        displayName:
+          type: string
+          minLength: 1
+      required:
+      - email
+      - password
+      - displayName
+    Session:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        expiresIn: &id002
+          type: integer
+          minimum: 0
+        user:
+          $ref: '#/components/schemas/User'
+        refreshToken:
+          type: string
+      required:
+      - accessToken
+      - expiresIn
+      - user
+    Refresh:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+      required: []
+    Variant:
+      type: object
+      properties:
+        id: *id001
+        examCode:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+      required:
+      - id
+      - examCode
+      - code
+      - name
+    Subject:
+      type: object
+      properties:
+        id: *id001
+        name:
+          type: string
+        topics:
+          type: array
+          items:
+            type: object
+            properties:
+              id: *id001
+              name:
+                type: string
+            required:
+            - id
+            - name
+      required:
+      - id
+      - name
+      - topics
+    Blueprint:
+      type: object
+      properties:
+        id: *id001
+        name:
+          type: string
+        version: *id002
+        durationSeconds: *id002
+        isFullLength:
+          type: boolean
+        sections:
+          type: array
+          items:
+            type: object
+            properties:
+              subjectId: *id001
+              quota: *id002
+              formats:
+                type: array
+                items: &id003
+                  type: string
+                  enum:
+                  - single_select
+                  - multi_select
+                  - fill_blank
+                  - matching
+                  - true_false_not_given
+                  - written
+            required:
+            - subjectId
+            - quota
+            - formats
+      required:
+      - id
+      - name
+      - version
+      - durationSeconds
+      - isFullLength
+      - sections
+    BuildQuiz:
+      type: object
+      properties:
+        variantId: *id001
+        topicIds:
+          type: array
+          items: *id001
+        difficulty:
+          type: string
+          enum:
+          - easy
+          - medium
+          - hard
+          - mixed
+        count:
+          type: integer
+          minimum: 1
+          maximum: 100
+        formats:
+          type: array
+          items: *id003
+      required:
+      - variantId
+      - topicIds
+      - difficulty
+      - count
+    StartMock:
+      type: object
+      properties:
+        blueprintId: *id001
+      required:
+      - blueprintId
+    Item:
+      type: object
+      properties:
+        id: *id001
+        format: *id003
+        prompt:
+          type: string
+        passage:
+          type: string
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              label:
+                type: string
+            required:
+            - id
+            - label
+        matchingRight:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              label:
+                type: string
+            required:
+            - id
+            - label
+        marks: &id005
+          type: number
+          minimum: 0
+      required:
+      - id
+      - format
+      - prompt
+      - marks
+    Answer:
+      type: object
+      properties:
+        answer: &id004
+          oneOf:
+          - type: string
+          - type: array
+            items:
+              type: string
+          - type: object
+            additionalProperties:
+              type: string
+      required:
+      - answer
+    Attempt:
+      type: object
+      properties:
+        id: *id001
+        variantId: *id001
+        mode:
+          type: string
+          enum:
+          - practice
+          - mock
+          - course
+        status:
+          type: string
+          enum:
+          - active
+          - submitted
+          - expired
+        startedAt:
+          type: string
+          format: date-time
+        deadlineAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+        savedAnswers:
+          type: array
+          items:
+            type: object
+            properties:
+              itemId: *id001
+              answer: *id004
+            required:
+            - itemId
+            - answer
+      required:
+      - id
+      - variantId
+      - mode
+      - status
+      - startedAt
+      - deadlineAt
+      - items
+      - savedAnswers
+    Result:
+      type: object
+      properties:
+        attemptId: *id001
+        variantId: *id001
+        mode:
+          type: string
+          enum:
+          - practice
+          - mock
+          - course
+        earnedMarks: *id005
+        availableMarks: *id005
+        objectiveAnswered: *id002
+        objectiveCorrect: *id002
+        pendingReview: *id002
+        review:
+          type: array
+          items:
+            type: object
+            properties:
+              itemId: *id001
+              gradingStatus:
+                type: string
+                enum:
+                - correct
+                - incorrect
+                - unanswered
+                - pending_review
+              earnedMarks: *id005
+              correctAnswer: *id004
+              explanation:
+                type: string
+            required:
+            - itemId
+            - gradingStatus
+            - earnedMarks
+      required:
+      - attemptId
+      - variantId
+      - mode
+      - earnedMarks
+      - availableMarks
+      - objectiveAnswered
+      - objectiveCorrect
+      - pendingReview
+      - review
+    TopicPerformance:
+      type: object
+      properties:
+        topicId: *id001
+        topicName:
+          type: string
+        distinctAnswered: *id002
+        accuracy:
+          type:
+          - number
+          - 'null'
+          minimum: 0
+          maximum: 100
+        status:
+          type: string
+          enum:
+          - weak
+          - not_weak
+          - insufficient
+          - unassessed
+      required:
+      - topicId
+      - topicName
+      - distinctAnswered
+      - accuracy
+      - status
+    Progress:
+      type: object
+      properties:
+        variantId: *id001
+        mode:
+          type: string
+          enum:
+          - practice
+          - mock
+          - course
+          - all
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicPerformance'
+      required:
+      - variantId
+      - mode
+      - topics
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
