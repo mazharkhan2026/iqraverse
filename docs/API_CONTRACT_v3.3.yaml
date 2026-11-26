@@ -1,0 +1,1323 @@
+components:
+  schemas:
+    Answer:
+      properties:
+        answer:
+          oneOf:
+          - type: string
+          - items:
+              type: string
+            type: array
+          - additionalProperties:
+              type: string
+            type: object
+      required:
+      - answer
+      type: object
+      description: '30%: single_select answer is an option ID string for all active exams, including IELTS reading
+        starter items. Other answer shapes reserved. Option must belong to attempt item.'
+    Attempt:
+      properties:
+        deadlineAt:
+          format: date-time
+          type:
+          - string
+          - 'null'
+        id:
+          format: uuid
+          type: string
+        items:
+          items:
+            $ref: '#/components/schemas/Item'
+          type: array
+        mode:
+          enum:
+          - practice
+          - mock
+          - course
+          type: string
+        savedAnswers:
+          items:
+            properties:
+              answer:
+                oneOf:
+                - type: string
+                - items:
+                    type: string
+                  type: array
+                - additionalProperties:
+                    type: string
+                  type: object
+              itemId:
+                format: uuid
+                type: string
+            required:
+            - itemId
+            - answer
+            type: object
+          type: array
+        startedAt:
+          format: date-time
+          type: string
+        status:
+          enum:
+          - active
+          - submitted
+          - expired
+          type: string
+        variantId:
+          format: uuid
+          type: string
+        syllabusVersionId:
+          type: string
+          format: uuid
+        blueprintId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        serverTime:
+          type: string
+          format: date-time
+        integrity:
+          $ref: '#/components/schemas/IntegrityState'
+        completionReason:
+          $ref: '#/components/schemas/CompletionReason'
+      required:
+      - id
+      - variantId
+      - mode
+      - status
+      - startedAt
+      - deadlineAt
+      - items
+      - savedAnswers
+      - syllabusVersionId
+      - blueprintId
+      - serverTime
+      - integrity
+      - completionReason
+      type: object
+    Blueprint:
+      properties:
+        durationSeconds:
+          minimum: 0
+          type: integer
+        id:
+          format: uuid
+          type: string
+        isFullLength:
+          type: boolean
+        name:
+          type: string
+        sections:
+          items:
+            properties:
+              formats:
+                items:
+                  enum:
+                  - single_select
+                  - multi_select
+                  - fill_blank
+                  - matching
+                  - true_false_not_given
+                  - written
+                  type: string
+                type: array
+              quota:
+                minimum: 0
+                type: integer
+              subjectId:
+                format: uuid
+                type: string
+            required:
+            - subjectId
+            - quota
+            - formats
+            type: object
+            description: '30%: single_select only for NSCT, MDCAT, NAT and IELTS Academic reading starter tests;
+              all other enum values reserved for later milestones and rejected if requested.'
+          type: array
+        version:
+          minimum: 0
+          type: integer
+        syllabusVersionId:
+          type: string
+          format: uuid
+        retakeLimit:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+        difficultyQuotas:
+          type:
+          - object
+          - 'null'
+          properties:
+            easy:
+              type: integer
+              minimum: 0
+            medium:
+              type: integer
+              minimum: 0
+            hard:
+              type: integer
+              minimum: 0
+          required:
+          - easy
+          - medium
+          - hard
+          description: Null = no fixed paper-wide difficulty quota. MDCAT full mock requires 27/126/27; NSCT has
+            no verified official difficulty split.
+        scoringPolicy:
+          type: object
+          properties:
+            correct:
+              type: number
+            incorrect:
+              type: number
+            unanswered:
+              type: number
+          required:
+          - correct
+          - incorrect
+          - unanswered
+        integrityPolicy:
+          $ref: '#/components/schemas/IntegrityPolicy'
+      required:
+      - id
+      - name
+      - version
+      - durationSeconds
+      - isFullLength
+      - sections
+      - syllabusVersionId
+      - retakeLimit
+      - difficultyQuotas
+      - scoringPolicy
+      - integrityPolicy
+      type: object
+      description: 'Published version only. Full MDCAT mock: 180 items, 10800 seconds, subject quotas 81/45/36/9/9,
+        difficulty quotas 27/126/27, marking 1/0/0. NAT and IELTS starter timed tests have isFullLength=false, explicit
+        demo names and configured quotas/duration. No official full-pattern claim for unverified starter tests.
+        NSCT full mock target 100 items, 7200 seconds, quotas 20 problem solving, 10 each for programming, DSA,
+        SE, web, databases, networks/cloud and AI/data, 5 each OS and cyber security. NSCT scoring +1/0/0 is proposed
+        platform policy, not verified official marking. Attach official duration/count evidence before publication.
+        All mocks secure.'
+    BuildQuiz:
+      properties:
+        count:
+          maximum: 100
+          minimum: 1
+          type: integer
+        difficulty:
+          enum:
+          - easy
+          - medium
+          - hard
+          - mixed
+          type: string
+        formats:
+          items:
+            enum:
+            - single_select
+            - multi_select
+            - fill_blank
+            - matching
+            - true_false_not_given
+            - written
+            type: string
+          type: array
+        topicIds:
+          items:
+            format: uuid
+            type: string
+          type: array
+          minItems: 1
+          uniqueItems: true
+        variantId:
+          format: uuid
+          type: string
+      required:
+      - variantId
+      - topicIds
+      - difficulty
+      - count
+      type: object
+      description: '30%: single_select only for NSCT, MDCAT, NAT and IELTS Academic reading starter tests; all other
+        enum values reserved for later milestones and rejected if requested. Topic IDs must belong to the requested
+        variant and its active syllabus edition.'
+    Error:
+      properties:
+        code:
+          type: string
+        details:
+          additionalProperties: true
+          type: object
+        message:
+          type: string
+      required:
+      - code
+      - message
+      type: object
+    Health:
+      properties:
+        status:
+          enum:
+          - ok
+          type: string
+      required:
+      - status
+      type: object
+    Item:
+      properties:
+        format:
+          enum:
+          - single_select
+          - multi_select
+          - fill_blank
+          - matching
+          - true_false_not_given
+          - written
+          type: string
+        id:
+          format: uuid
+          type: string
+        marks:
+          minimum: 0
+          type: number
+        matchingRight:
+          items:
+            properties:
+              id:
+                type: string
+              label:
+                type: string
+            required:
+            - id
+            - label
+            type: object
+          type: array
+        options:
+          items:
+            properties:
+              id:
+                type: string
+              label:
+                type: string
+            required:
+            - id
+            - label
+            type: object
+          type: array
+        passage:
+          type: string
+        prompt:
+          type: string
+        topicId:
+          type: string
+          format: uuid
+      required:
+      - id
+      - format
+      - prompt
+      - marks
+      - topicId
+      type: object
+      description: '30%: single_select only for NSCT, MDCAT, NAT and IELTS Academic reading starter tests; all other
+        enum values reserved for later milestones and rejected if requested. No answer key/explanation before finalized
+        result. All active items have exactly one correct option in server-only storage; IELTS reading items may
+        include passage text. True/False/Not Given starter items may be represented as single_select with three
+        labeled choices.'
+    Login:
+      properties:
+        email:
+          format: email
+          type: string
+        password:
+          minLength: 8
+          type: string
+      required:
+      - email
+      - password
+      type: object
+    Message:
+      properties:
+        message:
+          type: string
+      required:
+      - message
+      type: object
+    Progress:
+      properties:
+        mode:
+          enum:
+          - practice
+          - mock
+          - course
+          - all
+          type: string
+        topics:
+          items:
+            $ref: '#/components/schemas/TopicPerformance'
+          type: array
+        variantId:
+          format: uuid
+          type: string
+        syllabusVersionId:
+          type: string
+          format: uuid
+      required:
+      - variantId
+      - mode
+      - topics
+      - syllabusVersionId
+      type: object
+    Refresh:
+      properties:
+        refreshToken:
+          type: string
+      required: []
+      type: object
+    Register:
+      properties:
+        displayName:
+          minLength: 1
+          type: string
+        email:
+          format: email
+          type: string
+        password:
+          minLength: 8
+          type: string
+      required:
+      - email
+      - password
+      - displayName
+      type: object
+    Result:
+      properties:
+        attemptId:
+          format: uuid
+          type: string
+        availableMarks:
+          minimum: 0
+          type: number
+        earnedMarks:
+          minimum: 0
+          type: number
+          description: Current policies nonnegative; NSCT proposed platform scoring, not official certification.
+        mode:
+          enum:
+          - practice
+          - mock
+          - course
+          type: string
+        objectiveAnswered:
+          minimum: 0
+          type: integer
+        objectiveCorrect:
+          minimum: 0
+          type: integer
+        pendingReview:
+          minimum: 0
+          type: integer
+        review:
+          items:
+            properties:
+              correctAnswer:
+                oneOf:
+                - type: string
+                - items:
+                    type: string
+                  type: array
+                - additionalProperties:
+                    type: string
+                  type: object
+              earnedMarks:
+                minimum: 0
+                type: number
+              explanation:
+                type: string
+              gradingStatus:
+                enum:
+                - correct
+                - incorrect
+                - unanswered
+                - pending_review
+                type: string
+              itemId:
+                format: uuid
+                type: string
+              submittedAnswer:
+                oneOf:
+                - type: 'null'
+                - type: string
+                - type: array
+                  items:
+                    type: string
+                - type: object
+                  additionalProperties:
+                    type: string
+            required:
+            - itemId
+            - gradingStatus
+            - earnedMarks
+            - submittedAnswer
+            type: object
+            description: Review is only accessible for finalized attempts owned by caller; pending_review reserved
+              for later formats.
+          type: array
+        variantId:
+          format: uuid
+          type: string
+        syllabusVersionId:
+          type: string
+          format: uuid
+        submittedAt:
+          type: string
+          format: date-time
+        blueprintId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        integrity:
+          $ref: '#/components/schemas/IntegrityState'
+        completionReason:
+          $ref: '#/components/schemas/CompletionReason'
+      required:
+      - attemptId
+      - variantId
+      - mode
+      - earnedMarks
+      - availableMarks
+      - objectiveAnswered
+      - objectiveCorrect
+      - pendingReview
+      - review
+      - syllabusVersionId
+      - submittedAt
+      - blueprintId
+      - integrity
+      - completionReason
+      type: object
+    Session:
+      properties:
+        accessToken:
+          type: string
+        expiresIn:
+          minimum: 0
+          type: integer
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+      - accessToken
+      - expiresIn
+      - user
+      type: object
+    StartMock:
+      properties:
+        blueprintId:
+          format: uuid
+          type: string
+      required:
+      - blueprintId
+      type: object
+    Subject:
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        topics:
+          items:
+            properties:
+              id:
+                format: uuid
+                type: string
+              name:
+                type: string
+              chapterId:
+                type: string
+                format: uuid
+              chapterName:
+                type: string
+            required:
+            - id
+            - name
+            - chapterId
+            - chapterName
+            type: object
+          type: array
+      required:
+      - id
+      - name
+      - topics
+      type: object
+    TopicPerformance:
+      properties:
+        accuracy:
+          maximum: 100
+          minimum: 0
+          type:
+          - number
+          - 'null'
+        distinctAnswered:
+          minimum: 0
+          type: integer
+        status:
+          enum:
+          - weak
+          - not_weak
+          - insufficient
+          - unassessed
+          type: string
+        topicId:
+          format: uuid
+          type: string
+        topicName:
+          type: string
+      required:
+      - topicId
+      - topicName
+      - distinctAnswered
+      - accuracy
+      - status
+      type: object
+    User:
+      properties:
+        displayName:
+          type: string
+        email:
+          format: email
+          type: string
+        id:
+          format: uuid
+          type: string
+        roles:
+          items:
+            enum:
+            - student
+            - instructor
+            - admin
+            type: string
+          type: array
+      required:
+      - id
+      - email
+      - displayName
+      - roles
+      type: object
+    Variant:
+      properties:
+        code:
+          type: string
+        examCode:
+          type: string
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        activeSyllabusId:
+          type: string
+          format: uuid
+        syllabusEdition:
+          type: string
+      required:
+      - id
+      - examCode
+      - code
+      - name
+      - activeSyllabusId
+      - syllabusEdition
+      type: object
+      description: Published active NSCT, MDCAT, NAT (proposed initial variant NAT-IE), and IELTS (proposed initial
+        variant Academic) are returned at 30%. Each has its own syllabus edition and variant ID; starter scope is
+        not an official full-exam claim.
+    IntegrityPolicy:
+      type: object
+      properties:
+        required:
+          type: boolean
+        version:
+          type: string
+        violationLimit:
+          type: integer
+          minimum: 1
+        graceSeconds:
+          type: integer
+          minimum: 0
+      required:
+      - required
+      - version
+      - violationLimit
+      - graceSeconds
+      description: 'Mock: required=true, proposed version secure-v1, limit=3, grace=3 seconds; practice: required=false.
+        Published policy immutable per attempt. Client events are advisory; no official proctoring claim.'
+    IntegrityState:
+      type: object
+      properties:
+        policy:
+          $ref: '#/components/schemas/IntegrityPolicy'
+        countedViolations:
+          type: integer
+          minimum: 0
+        flagged:
+          type: boolean
+      required:
+      - policy
+      - countedViolations
+      - flagged
+      description: Server-owned state. Flag means policy threshold reached, not proven cheating.
+    CompletionReason:
+      type:
+      - string
+      - 'null'
+      enum:
+      - user_submit
+      - deadline
+      - violation_limit
+      - null
+    IntegrityEvent:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+          - screen_away
+      required:
+      - eventId
+      - type
+      description: One client report per excursion after grace; coalesce simultaneous visibility/fullscreen/background
+        events. Retry with same eventId. Do not report network loss as screen_away. No client score/count/timestamps
+        trusted.
+    IntegrityEventResult:
+      type: object
+      properties:
+        attemptId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - active
+          - submitted
+          - expired
+        integrity:
+          $ref: '#/components/schemas/IntegrityState'
+        completionReason:
+          $ref: '#/components/schemas/CompletionReason'
+        serverTime:
+          type: string
+          format: date-time
+      required:
+      - attemptId
+      - status
+      - integrity
+      - completionReason
+      - serverTime
+      description: Server deduplicates and serializes event acceptance, deadline check and finalization. If threshold
+        reached, finalize saved answers once. Use result endpoint after finalization.
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+info:
+  description: Review draft. NSCT first, full NSCT and MDCAT mocks, NAT-IE and IELTS Academic reading starter tests.
+    Secure mock controls use server-side attempt policy and client-reported advisory events. All active formats
+    single_select. Auth session-family binding/transport, admin, course, verification/recovery and offline importer
+    require detailed joint review. No claim of deployed API or guaranteed anti-cheating.
+  title: IqraVerse 30% NSCT-first four-exam API contract — baseline v3.3
+  version: 0.3.3
+openapi: 3.1.0
+paths:
+  /attempts:
+    get:
+      parameters:
+      - in: query
+        name: variantId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: query
+        name: mode
+        required: false
+        schema:
+          enum:
+          - practice
+          - mock
+          - course
+          type: string
+      - in: query
+        name: cursor
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: limit
+        required: false
+        schema:
+          maximum: 100
+          minimum: 1
+          type: integer
+      - name: syllabusVersionId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Omit for active edition; explicit value must belong to selected variant and be authorized.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  items:
+                    items:
+                      $ref: '#/components/schemas/Result'
+                    type: array
+                  nextCursor:
+                    type:
+                    - string
+                    - 'null'
+                required:
+                - items
+                - nextCursor
+                type: object
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      summary: GET /attempts
+      description: List history scoped by owner and selected variant/edition/mode. Block answer-revealing history
+        during active secure mock for same account (409).
+  /attempts/custom:
+    post:
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BuildQuiz'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+        '409':
+          description: State conflict or insufficient eligible question bank
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      summary: POST /attempts/custom
+      description: NSCT, MDCAT, NAT or IELTS Academic reading starter practice; approved single-select bank, variant/edition-scoped
+        topics, requested difficulty/count, no duplicate logical question; 409 if insufficient. No course enrollment
+        required. Ordinary practice is not secure; deny new practice during an active secure mock to prevent answer
+        lookup within the platform.
+  /attempts/mock:
+    post:
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartMock'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+        '409':
+          description: State conflict or insufficient eligible question bank
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      summary: POST /attempts/mock
+      description: Server enforces eligibility, subject and global difficulty quotas, retake limits, fixed deadline
+        and approved unique questions. Return 409 INSUFFICIENT_QUESTION_BANK if quotas cannot be satisfied. Prefer
+        unseen questions; no silent shortening. Full MDCAT is mandatory; NAT and IELTS starter tests use separately
+        published shortened blueprints (isFullLength=false), explicit demo labels and raw objective scores, never
+        IELTS bands. NSCT full mock required. Create atomically one active secure attempt per user across variants,
+        bound to authenticated session family stable over refresh. Other sessions denied; expired attempts finalized
+        before new start. Secure rules disclosed before start; no start if policy unavailable.
+  /attempts/{attemptId}:
+    get:
+      parameters:
+      - in: path
+        name: attemptId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      summary: GET /attempts/{attemptId}
+      description: ' Active secure attempt access requires owner and bound auth session family; server checks deadline
+        first. No session takeover. Finalized attempts read by owner per policy.'
+  /attempts/{attemptId}/answers/{itemId}:
+    put:
+      parameters:
+      - in: path
+        name: attemptId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: path
+        name: itemId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Answer'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      summary: PUT /attempts/{attemptId}/answers/{itemId}
+      description: ' Active secure attempt access requires owner and bound auth session family; server checks deadline
+        first. No session takeover. Finalized attempts read by owner per policy.'
+  /attempts/{attemptId}/result:
+    get:
+      parameters:
+      - in: path
+        name: attemptId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      summary: GET /attempts/{attemptId}/result
+      description: Only finalized attempt owner; active attempt returns 409, never discloses keys. Block answer-revealing
+        results during another active secure mock for the same account; return 409 until secure mock finalized.
+  /attempts/{attemptId}/submit:
+    post:
+      parameters:
+      - in: path
+        name: attemptId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      summary: Finalize once; repeated calls return same result
+      description: Server finalizes transaction once, scores immutable approved keys; expired attempts use saved
+        answers only. No client-supplied score. Active secure attempt access requires owner and bound auth session
+        family; server checks deadline first. No session takeover. Finalized attempts read by owner per policy.
+        Repeated finalization returns same score and completion reason; deadline or violation limit cannot be overwritten
+        by user submission.
+  /auth/login:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      security: []
+      summary: POST /auth/login
+      description: Email/password only in 30%. Web refresh token only via HttpOnly cookie; native token in JSON
+        only on approved native flow. Exact client transport and CSRF rules require joint review before auth integration.
+  /auth/logout:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Refresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      summary: POST /auth/logout
+      description: Web uses refresh cookie with CSRF protection; native uses refreshToken body. Never expose browser
+        refresh token in JSON. Session transport and logout after expiry to be finalized before implementation.
+  /auth/refresh:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Refresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      security: []
+      summary: POST /auth/refresh
+      description: Web uses refresh cookie with CSRF protection; native uses refreshToken body. Never expose browser
+        refresh token in JSON. Session transport and logout after expiry to be finalized before implementation.
+  /auth/register:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      security: []
+      summary: POST /auth/register
+  /exams/variants:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Variant'
+                type: array
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      summary: GET /exams/variants
+  /exams/variants/{variantId}/blueprints:
+    get:
+      parameters:
+      - in: path
+        name: variantId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - name: syllabusVersionId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Omit for active edition; explicit value must belong to selected variant and be authorized.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Blueprint'
+                type: array
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      summary: GET /exams/variants/{variantId}/blueprints
+  /exams/variants/{variantId}/subjects:
+    get:
+      parameters:
+      - in: path
+        name: variantId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - name: syllabusVersionId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Omit for active edition; explicit value must belong to selected variant and be authorized.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Subject'
+                type: array
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      summary: GET /exams/variants/{variantId}/subjects
+  /health:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      security: []
+      summary: GET /health
+  /me:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      summary: GET /me
+  /progress/{variantId}:
+    get:
+      parameters:
+      - in: path
+        name: variantId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: query
+        name: mode
+        required: false
+        schema:
+          enum:
+          - practice
+          - mock
+          - course
+          - all
+          type: string
+      - name: syllabusVersionId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Omit for active edition; explicit value must belong to selected variant and be authorized.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Progress'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error
+      summary: GET /progress/{variantId}
+      description: Simple accuracy on latest eligible graded answer per distinct logical question in the selected
+        edition and topic. Fewer than 3 distinct answered = insufficient; below 60% with adequate sample = weak.
+        Unanswered excluded. Mode all means all independent practice/mock only; course results explicit.
+  /attempts/{attemptId}/integrity-events:
+    post:
+      summary: Report secure mock screen-away excursion
+      description: Owner and bound session only. Secure mocks only; practice rejected. Server checks deadline and
+        locks attempt, deduplicates eventId, counts one accepted report, finalizes saved answers at threshold. Retry
+        accepted event returns current state without increment. New event after finalization returns 409. Events
+        are advisory and not proof of cheating. Session mismatch 403; no client-controlled penalty.
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntegrityEvent'
+      responses:
+        '200':
+          description: Current integrity and attempt state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrityEventResult'
+        '400':
+          description: Invalid event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Wrong session or access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Attempt not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Inactive attempt or policy conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+security:
+- bearerAuth: []
+servers:
+- url: http://localhost:3001/api/v1
