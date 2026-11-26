@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: iqraverse-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: iqraverse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set database password}
+      POSTGRES_DB: iqraverse_db
+
+    ports:
+      - "127.0.0.1:5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iqraverse -d iqraverse_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
