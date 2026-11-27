@@ -5,3 +5,252 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum UserStatus {
+  active
+  suspended
+  disabled
+}
+
+enum RoleName {
+  student
+  instructor
+  admin
+}
+
+model User {
+  id              String     @id @default(uuid()) @db.Uuid
+  email           String     @unique
+  passwordHash    String     @map("password_hash")
+  status          UserStatus @default(active)
+  emailVerifiedAt DateTime?  @map("email_verified_at") @db.Timestamptz(3)
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  profile      Profile?
+  roles        UserRole[] @relation("AssignedRoles")
+  grantedRoles UserRole[] @relation("GrantedRoles")
+  revokedRoles UserRole[] @relation("RevokedRoles")
+
+  sessionFamilies    AuthSessionFamily[]
+  verificationTokens VerificationToken[]
+  resetTokens        ResetToken[]
+
+  @@map("users")
+}
+
+model Profile {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @unique @map("user_id") @db.Uuid
+  displayName String   @map("display_name")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("profiles")
+}
+
+model Role {
+  id   String   @id @default(uuid()) @db.Uuid
+  name RoleName @unique
+
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId    String    @map("user_id") @db.Uuid
+  roleId    String    @map("role_id") @db.Uuid
+  grantedAt DateTime  @default(now()) @map("granted_at") @db.Timestamptz(3)
+  grantedBy String?   @map("granted_by") @db.Uuid
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  revokedBy String?   @map("revoked_by") @db.Uuid
+
+  user User @relation("AssignedRoles", fields: [userId], references: [id], onDelete: Restrict)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  grantor User? @relation("GrantedRoles", fields: [grantedBy], references: [id], onDelete: Restrict)
+  revoker User? @relation("RevokedRoles", fields: [revokedBy], references: [id], onDelete: Restrict)
+
+  @@id([userId, roleId])
+  @@index([roleId, revokedAt])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId     String @map("role_id") @db.Uuid
+  permission String
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@id([roleId, permission])
+  @@map("role_permissions")
+}
+
+model AuthSessionFamily {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  sessions RefreshSession[]
+
+  @@index([userId, revokedAt])
+  @@map("auth_session_families")
+}
+
+model RefreshSession {
+  id        String    @id @default(uuid()) @db.Uuid
+  familyId  String    @map("family_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  rotatedAt DateTime? @map("rotated_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  parentId  String?   @unique @map("parent_id") @db.Uuid
+
+  family AuthSessionFamily @relation(fields: [familyId], references: [id], onDelete: Restrict)
+
+  parent      RefreshSession? @relation("TokenRotation", fields: [parentId], references: [id], onDelete: Restrict)
+  replacement RefreshSession? @relation("TokenRotation")
+
+  @@index([familyId, revokedAt])
+  @@map("refresh_sessions")
+}
+
+model VerificationToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, expiresAt])
+  @@map("verification_tokens")
+}
+
+model ResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, expiresAt])
+  @@map("reset_tokens")
+}
+
+enum SyllabusStatus {
+  draft
+  published
+  archived
+}
+
+model Exam {
+  id        String   @id @default(uuid()) @db.Uuid
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(false) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  variants ExamVariant[]
+
+  @@map("exams")
+}
+
+model ExamVariant {
+  id        String   @id @default(uuid()) @db.Uuid
+  examId    String   @map("exam_id") @db.Uuid
+  code      String
+  name      String
+  isActive  Boolean  @default(false) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Restrict)
+
+  syllabusVersions SyllabusVersion[]
+
+  @@unique([examId, code])
+  @@map("exam_variants")
+}
+
+model SyllabusVersion {
+  id                String         @id @default(uuid()) @db.Uuid
+  variantId         String         @map("variant_id") @db.Uuid
+  edition           String
+  applicabilityYear Int?           @map("applicability_year")
+  sourceUri         String?        @map("source_uri")
+  sourceLabel       String         @map("source_label")
+  status            SyllabusStatus @default(draft)
+  publishedAt       DateTime?      @map("published_at") @db.Timestamptz(3)
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  variant ExamVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  subjects Subject[]
+
+  @@unique([variantId, edition])
+  @@index([variantId, status])
+  @@map("syllabus_versions")
+}
+
+model Subject {
+  id                String   @id @default(uuid()) @db.Uuid
+  syllabusVersionId String   @map("syllabus_version_id") @db.Uuid
+  code              String
+  name              String
+  weightage         Decimal? @db.Decimal(5, 2)
+  sortOrder         Int      @default(0) @map("sort_order")
+
+  syllabusVersion SyllabusVersion @relation(fields: [syllabusVersionId], references: [id], onDelete: Restrict)
+
+  chapters Chapter[]
+
+  @@unique([syllabusVersionId, code])
+  @@index([syllabusVersionId, sortOrder])
+  @@map("subjects")
+}
+
+model Chapter {
+  id        String @id @default(uuid()) @db.Uuid
+  subjectId String @map("subject_id") @db.Uuid
+  code      String
+  name      String
+  sortOrder Int    @default(0) @map("sort_order")
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+
+  topics Topic[]
+
+  @@unique([subjectId, code])
+  @@index([subjectId, sortOrder])
+  @@map("chapters")
+}
+
+model Topic {
+  id        String @id @default(uuid()) @db.Uuid
+  chapterId String @map("chapter_id") @db.Uuid
+  code      String
+  name      String
+  sortOrder Int    @default(0) @map("sort_order")
+
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Restrict)
+
+  @@unique([chapterId, code])
+  @@index([chapterId, sortOrder])
+  @@map("topics")
+}
