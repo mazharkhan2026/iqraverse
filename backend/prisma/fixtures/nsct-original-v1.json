@@ -1,0 +1,152 @@
+[
+  {
+    "recordId": "ORIG-001",
+    "topicCode": "NETWORKS_CLOUD-05",
+    "difficulty": "medium",
+    "prompt": "A file transfer must deliver bytes in order and retransmit lost data. Which transport protocol supplies these properties?",
+    "options": [
+      "UDP",
+      "TCP",
+      "ARP",
+      "ICMP"
+    ],
+    "correctIndex": 1,
+    "explanation": "TCP provides reliable, ordered byte-stream delivery with retransmission.",
+    "section": "NETWORKS_CLOUD"
+  },
+  {
+    "recordId": "ORIG-002",
+    "topicCode": "PROGRAMMING-04",
+    "difficulty": "easy",
+    "prompt": "A loop starts with x = 1 and doubles x three times. What is x after the loop?",
+    "options": [
+      "3",
+      "6",
+      "8",
+      "16"
+    ],
+    "correctIndex": 2,
+    "explanation": "The values after each doubling are 2, 4 and 8.",
+    "section": "PROGRAMMING"
+  },
+  {
+    "recordId": "ORIG-003",
+    "topicCode": "DSA-02",
+    "difficulty": "easy",
+    "prompt": "A ticket queue always processes the earliest waiting ticket first. Which removal policy matches this behavior?",
+    "options": [
+      "LIFO",
+      "Random removal",
+      "Highest value first",
+      "FIFO"
+    ],
+    "correctIndex": 3,
+    "explanation": "First in, first out removes the oldest inserted item first.",
+    "section": "DSA"
+  },
+  {
+    "recordId": "ORIG-004",
+    "topicCode": "OS-04",
+    "difficulty": "medium",
+    "prompt": "Three processes arrive together with CPU burst times 7, 2 and 4 milliseconds. Which burst runs first under nonpreemptive shortest-job-first scheduling?",
+    "options": [
+      "2 ms",
+      "4 ms",
+      "7 ms",
+      "All simultaneously on one CPU"
+    ],
+    "correctIndex": 0,
+    "explanation": "Shortest-job-first selects the available process with the smallest CPU burst.",
+    "section": "OS"
+  },
+  {
+    "recordId": "ORIG-005",
+    "topicCode": "SE-10",
+    "difficulty": "easy",
+    "prompt": "A developer checks whether a single tax calculation function returns the expected value for a known input. Which testing level best describes this?",
+    "options": [
+      "System testing",
+      "Acceptance testing",
+      "Unit testing",
+      "Load testing"
+    ],
+    "correctIndex": 2,
+    "explanation": "Unit testing checks an isolated component such as a function.",
+    "section": "SE"
+  },
+  {
+    "recordId": "ORIG-006",
+    "topicCode": "WEB-02",
+    "difficulty": "easy",
+    "prompt": "A browser requests a page over HTTP and the server responds with status 404. What does this status mean?",
+    "options": [
+      "Successful request",
+      "Resource not found",
+      "Permanent redirect",
+      "Request accepted for later processing"
+    ],
+    "correctIndex": 1,
+    "explanation": "HTTP 404 indicates that the requested resource was not found.",
+    "section": "WEB"
+  },
+  {
+    "recordId": "ORIG-007",
+    "topicCode": "AI_DATA-06",
+    "difficulty": "medium",
+    "prompt": "A model learns to classify emails using training examples already labeled spam or not spam. What type of learning is this?",
+    "options": [
+      "Unsupervised learning",
+      "Reinforcement learning",
+      "Clustering without labels",
+      "Supervised learning"
+    ],
+    "correctIndex": 3,
+    "explanation": "Supervised learning uses labeled training examples to learn a prediction function.",
+    "section": "AI_DATA"
+  },
+  {
+    "recordId": "ORIG-008",
+    "topicCode": "CYBER-08",
+    "difficulty": "easy",
+    "prompt": "An employee needs permission to read reports but not edit or delete them. Which principle supports granting only read access?",
+    "options": [
+      "Least privilege",
+      "Security through obscurity",
+      "Password reuse",
+      "Unrestricted delegation"
+    ],
+    "correctIndex": 0,
+    "explanation": "Least privilege grants only the permissions needed for the task.",
+    "section": "CYBER"
+  },
+  {
+    "recordId": "ORIG-009",
+    "topicCode": "DATABASES-06",
+    "difficulty": "medium",
+    "prompt": "A table has columns id and score. Which SQL query returns only rows with score greater than 70?",
+    "options": [
+      "SELECT * FROM results ORDER BY score;",
+      "SELECT * FROM results WHERE score > 70;",
+      "SELECT COUNT(*) FROM results;",
+      "SELECT * FROM results WHERE score = 70;"
+    ],
+    "correctIndex": 1,
+    "explanation": "The WHERE clause filters rows using the specified predicate.",
+    "section": "DATABASES"
+  },
+  {
+    "recordId": "ORIG-010",
+    "topicCode": "PROBLEM_SOLVING-06",
+    "difficulty": "easy",
+    "prompt": "A sequence begins 3, 6, 12, 24 and follows the rule of doubling the previous term. What is the next term?",
+    "options": [
+      "30",
+      "36",
+      "48",
+      "72"
+    ],
+    "correctIndex": 2,
+    "explanation": "Doubling 24 gives 48.",
+    "section": "PROBLEM_SOLVING"
+  }
+]
