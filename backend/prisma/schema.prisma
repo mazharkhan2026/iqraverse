@@ -19,17 +19,19 @@ enum RoleName {
 }
 
 model User {
-  ownedQuestions            Question[]         @relation("QuestionOwner")
-  reviewedQuestionSources   Source[]           @relation("QuestionSourceReviewer")
-  questionModerationReviews ModerationReview[] @relation("QuestionReviewer")
-  questionImportBatches     ImportBatch[]      @relation("QuestionImportCreator")
-  id                        String             @id @default(uuid()) @db.Uuid
-  email                     String             @unique
-  passwordHash              String             @map("password_hash")
-  status                    UserStatus         @default(active)
-  emailVerifiedAt           DateTime?          @map("email_verified_at") @db.Timestamptz(3)
-  createdAt                 DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt                 DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  practiceAttempts          Attempt[]
+  attemptRequests           IdempotencyRecord[]
+  ownedQuestions            Question[]          @relation("QuestionOwner")
+  reviewedQuestionSources   Source[]            @relation("QuestionSourceReviewer")
+  questionModerationReviews ModerationReview[]  @relation("QuestionReviewer")
+  questionImportBatches     ImportBatch[]       @relation("QuestionImportCreator")
+  id                        String              @id @default(uuid()) @db.Uuid
+  email                     String              @unique
+  passwordHash              String              @map("password_hash")
+  status                    UserStatus          @default(active)
+  emailVerifiedAt           DateTime?           @map("email_verified_at") @db.Timestamptz(3)
+  createdAt                 DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                 DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   profile      Profile?
   roles        UserRole[] @relation("AssignedRoles")
@@ -95,6 +97,7 @@ model RolePermission {
 }
 
 model AuthSessionFamily {
+  attempts  Attempt[]
   id        String    @id @default(uuid()) @db.Uuid
   userId    String    @map("user_id") @db.Uuid
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -175,13 +178,15 @@ model Exam {
 }
 
 model ExamVariant {
-  id        String   @id @default(uuid()) @db.Uuid
-  examId    String   @map("exam_id") @db.Uuid
-  code      String
-  name      String
-  isActive  Boolean  @default(false) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  assessments Assessment[]
+  attempts    Attempt[]
+  id          String       @id @default(uuid()) @db.Uuid
+  examId      String       @map("exam_id") @db.Uuid
+  code        String
+  name        String
+  isActive    Boolean      @default(false) @map("is_active")
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   exam Exam @relation(fields: [examId], references: [id], onDelete: Restrict)
 
@@ -192,6 +197,8 @@ model ExamVariant {
 }
 
 model SyllabusVersion {
+  assessments       Assessment[]
+  attempts          Attempt[]
   id                String         @id @default(uuid()) @db.Uuid
   variantId         String         @map("variant_id") @db.Uuid
   edition           String
@@ -246,6 +253,7 @@ model Chapter {
 }
 
 model Topic {
+  attemptItems          AttemptItem[]
   questions             Question[]
   questionImportRecords ImportStagingRecord[]
   id                    String                @id @default(uuid()) @db.Uuid
@@ -356,11 +364,13 @@ model Passage {
 }
 
 model Question {
-  id        String        @id @default(uuid()) @db.Uuid
-  topicId   String        @map("topic_id") @db.Uuid
-  ownerId   String?       @map("owner_id") @db.Uuid
-  scope     QuestionScope @default(platform)
-  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  assessmentItems AssessmentItem[]
+  attemptItems    AttemptItem[]
+  id              String           @id @default(uuid()) @db.Uuid
+  topicId         String           @map("topic_id") @db.Uuid
+  ownerId         String?          @map("owner_id") @db.Uuid
+  scope           QuestionScope    @default(platform)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
 
   topic    Topic             @relation(fields: [topicId], references: [id], onDelete: Restrict)
   owner    User?             @relation("QuestionOwner", fields: [ownerId], references: [id], onDelete: Restrict)
@@ -372,25 +382,27 @@ model Question {
 }
 
 model QuestionVersion {
-  id             String               @id @default(uuid()) @db.Uuid
-  questionId     String               @map("question_id") @db.Uuid
-  version        Int
-  sourceId       String               @map("source_id") @db.Uuid
-  sourceRecordId String?              @map("source_record_id")
-  sourcePage     Int?                 @map("source_page")
-  passageId      String?              @map("passage_id") @db.Uuid
-  format         QuestionFormat       @default(single_select)
-  difficulty     QuestionDifficulty
-  prompt         String
-  optionsJson    Json                 @map("options_json")
-  answerKeyJson  Json                 @map("answer_key_json")
-  explanation    String
-  marks          Decimal              @default(1) @db.Decimal(8, 2)
-  fingerprint    String?
-  status         QuestionReviewStatus @default(draft)
-  isCurrent      Boolean              @default(false) @map("is_current")
-  shuffleOptions Boolean              @default(false) @map("shuffle_options")
-  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  assessmentItems AssessmentItem[]
+  attemptItems    AttemptItem[]
+  id              String               @id @default(uuid()) @db.Uuid
+  questionId      String               @map("question_id") @db.Uuid
+  version         Int
+  sourceId        String               @map("source_id") @db.Uuid
+  sourceRecordId  String?              @map("source_record_id")
+  sourcePage      Int?                 @map("source_page")
+  passageId       String?              @map("passage_id") @db.Uuid
+  format          QuestionFormat       @default(single_select)
+  difficulty      QuestionDifficulty
+  prompt          String
+  optionsJson     Json                 @map("options_json")
+  answerKeyJson   Json                 @map("answer_key_json")
+  explanation     String
+  marks           Decimal              @default(1) @db.Decimal(8, 2)
+  fingerprint     String?
+  status          QuestionReviewStatus @default(draft)
+  isCurrent       Boolean              @default(false) @map("is_current")
+  shuffleOptions  Boolean              @default(false) @map("shuffle_options")
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
 
   question       Question              @relation(fields: [questionId], references: [id], onDelete: Restrict)
   source         Source                @relation(fields: [sourceId], references: [id], onDelete: Restrict)
@@ -469,4 +481,135 @@ model ImportStagingRecord {
   @@index([fingerprint])
   @@index([questionVersionId])
   @@map("import_staging_records")
+}
+
+// Practice persistence — proposed v3.3; mock blueprint/event models follow.
+enum AttemptMode {
+  practice
+  mock
+  course
+}
+
+enum AttemptStatus {
+  active
+  submitted
+  expired
+}
+
+enum AttemptCompletionReason {
+  user_submit
+  deadline
+  violation_limit
+}
+
+model Assessment {
+  id                String           @id @default(uuid()) @db.Uuid
+  variantId         String           @map("variant_id") @db.Uuid
+  syllabusVersionId String           @map("syllabus_version_id") @db.Uuid
+  mode              AttemptMode
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  variant           ExamVariant      @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  syllabus          SyllabusVersion  @relation(fields: [syllabusVersionId], references: [id], onDelete: Restrict)
+  items             AssessmentItem[]
+  attempts          Attempt[]
+
+  @@index([variantId, syllabusVersionId, mode])
+  @@map("assessments")
+}
+
+model AssessmentItem {
+  id                String          @id @default(uuid()) @db.Uuid
+  assessmentId      String          @map("assessment_id") @db.Uuid
+  questionId        String          @map("question_id") @db.Uuid
+  questionVersionId String          @map("question_version_id") @db.Uuid
+  position          Int
+  assessment        Assessment      @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+  question          Question        @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  questionVersion   QuestionVersion @relation(fields: [questionVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([assessmentId, position])
+  @@unique([assessmentId, questionId])
+  @@map("assessment_items")
+}
+
+model Attempt {
+  id                 String                   @id @default(uuid()) @db.Uuid
+  userId             String                   @map("user_id") @db.Uuid
+  assessmentId       String                   @map("assessment_id") @db.Uuid
+  variantId          String                   @map("variant_id") @db.Uuid
+  syllabusVersionId  String                   @map("syllabus_version_id") @db.Uuid
+  sessionFamilyId    String                   @map("session_family_id") @db.Uuid
+  mode               AttemptMode
+  status             AttemptStatus            @default(active)
+  startedAt          DateTime                 @default(now()) @map("started_at") @db.Timestamptz(3)
+  deadlineAt         DateTime?                @map("deadline_at") @db.Timestamptz(3)
+  submittedAt        DateTime?                @map("submitted_at") @db.Timestamptz(3)
+  completionReason   AttemptCompletionReason? @map("completion_reason")
+  availableMarks     Decimal                  @map("available_marks") @db.Decimal(8, 2)
+  earnedMarks        Decimal?                 @map("earned_marks") @db.Decimal(8, 2)
+  resultSnapshot     Json?                    @map("result_snapshot")
+  integrityPolicy    Json                     @map("integrity_policy")
+  countedViolations  Int                      @default(0) @map("counted_violations")
+  flagged            Boolean                  @default(false)
+  user               User                     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  assessment         Assessment               @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+  variant            ExamVariant              @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  syllabus           SyllabusVersion          @relation(fields: [syllabusVersionId], references: [id], onDelete: Restrict)
+  sessionFamily      AuthSessionFamily        @relation(fields: [sessionFamilyId], references: [id], onDelete: Restrict)
+  items              AttemptItem[]
+  idempotencyRecords IdempotencyRecord[]
+
+  @@index([userId, variantId, syllabusVersionId, mode, startedAt])
+  @@index([userId, mode, status])
+  @@index([status, deadlineAt])
+  @@map("attempts")
+}
+
+model AttemptItem {
+  id                String          @id @default(uuid()) @db.Uuid
+  attemptId         String          @map("attempt_id") @db.Uuid
+  questionId        String          @map("question_id") @db.Uuid
+  questionVersionId String          @map("question_version_id") @db.Uuid
+  topicId           String          @map("topic_id") @db.Uuid
+  position          Int
+  presentation      Json
+  correctOptionId   String          @map("correct_option_id")
+  explanation       String
+  marks             Decimal         @db.Decimal(8, 2)
+  attempt           Attempt         @relation(fields: [attemptId], references: [id], onDelete: Restrict)
+  question          Question        @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  questionVersion   QuestionVersion @relation(fields: [questionVersionId], references: [id], onDelete: Restrict)
+  topic             Topic           @relation(fields: [topicId], references: [id], onDelete: Restrict)
+  answer            AttemptAnswer?
+
+  @@unique([attemptId, position])
+  @@unique([attemptId, questionId])
+  @@index([topicId, questionId])
+  @@map("attempt_items")
+}
+
+model AttemptAnswer {
+  itemId      String      @id @map("item_id") @db.Uuid
+  answer      String
+  isCorrect   Boolean?    @map("is_correct")
+  earnedMarks Decimal?    @map("earned_marks") @db.Decimal(8, 2)
+  savedAt     DateTime    @default(now()) @map("saved_at") @db.Timestamptz(3)
+  item        AttemptItem @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@map("attempt_answers")
+}
+
+model IdempotencyRecord {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  operation   String
+  key         String
+  requestHash String   @map("request_hash")
+  attemptId   String   @map("attempt_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  attempt     Attempt  @relation(fields: [attemptId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, operation, key])
+  @@map("idempotency_records")
 }
