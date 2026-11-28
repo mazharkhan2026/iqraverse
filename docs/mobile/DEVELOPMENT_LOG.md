@@ -85,3 +85,19 @@ No official duration/count or question-bank publication claims.
 The client and repository are not wired to UI or authentication; real base
 URL, typed DTOs, session transport and backend integration remain pending.
 Only mobile branch and mobile documentation changed.
+
+## Milestone 04 — CI regression fix and NSCT practice (2026-11-28)
+
+CI run 46140620722 failed in flutter analyze due to use_null_aware_elements
+in catalog_repository.dart line 26. Tests and APK build were skipped.
+- 94b34f1: replace conditional map entry with Dart null-aware value syntax.
+- 7066816: immutable practice question model and score calculation.
+- 92e0aa1: ten original sample questions, one per NSCT competency, and filtering.
+- dd2b1bd: untimed practice configuration, single-answer session, explanations and results.
+- bdea1b6: connect practice to NSCT navigation.
+- b311647: unit tests for question integrity, filtering and scoring.
+
+Practice is local preview only, with deterministic selection and no persistence,
+official question bank, live API or server results. Secure mock functionality is
+not implemented and must not reuse this client-side answer-key design.
+Latest CI result must be checked before marking this milestone verified.
