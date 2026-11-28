@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../core/theme/app_theme.dart';
+import '../core/theme/theme_provider.dart';
 import 'router/app_router.dart';
 
 class IqraVerseApp extends ConsumerWidget {
@@ -14,7 +15,7 @@ class IqraVerseApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.dark,
+      themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
     );
   }
