@@ -1,9 +1,16 @@
 import 'package:material_ui/material_ui.dart';
 
 class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key, required this.onContinue});
+  const WelcomeScreen({
+    super.key,
+    required this.onContinue,
+    required this.onLogin,
+    required this.onRegister,
+  });
 
   final VoidCallback onContinue;
+  final VoidCallback onLogin;
+  final VoidCallback onRegister;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +49,15 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 40),
                   FilledButton(
+                    onPressed: onRegister,
+                    child: const Text('Create student account'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: onLogin,
+                    child: const Text('Sign in'),
+                  ),
+                  TextButton(
                     onPressed: onContinue,
                     child: const Text('Explore preview'),
                   ),
