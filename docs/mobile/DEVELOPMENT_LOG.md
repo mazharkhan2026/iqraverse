@@ -101,3 +101,23 @@ Practice is local preview only, with deterministic selection and no persistence,
 official question bank, live API or server results. Secure mock functionality is
 not implemented and must not reuse this client-side answer-key design.
 Latest CI result must be checked before marking this milestone verified.
+
+## Milestone 05 — Secure mock foundation (2026-11-28)
+
+Previous CI run 46140947824 succeeded for b311647; artifact 15262005027
+contains the debug APK with NSCT practice and the catalog analyzer fix.
+
+- 07889ce: mock API repository for start, resume, answer saving, integrity
+  events, submit and result. Caller must supply authenticated session-bound Dio.
+- 7ceb780: countdown estimate from server deadline and monotonic elapsed time.
+- 009c68a: pure screen-away excursion tracker, grace and coalescing.
+- fedc828: tests for countdown and excursion logic.
+- b22cfef: four-exam rules screen; start remains disabled until a published
+  blueprint, policy, authenticated session and approved bank are available.
+- 8d539cf: expose mock rules within student navigation.
+
+No real mock session, question UI, lifecycle observer wiring, UUID generation,
+durable event retry queue, screenshot protection or server integration yet.
+No answer keys or scores are computed for mocks on mobile. The proposed
+secure-v1 policy is not evidence of official proctoring. A disconnect alone is
+not a violation. Server remains authoritative. New CI verification pending.
