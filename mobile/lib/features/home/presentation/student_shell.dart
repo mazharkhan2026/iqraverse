@@ -1,15 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../curriculum/presentation/nsct_catalog_screen.dart';
+import '../../analytics/application/practice_history.dart';
+import '../../analytics/presentation/analytics_screen.dart';
+import '../../courses/presentation/courses_screen.dart';
 import '../../exams/application/exam_provider.dart';
-import '../../exams/domain/exam.dart';
-import '../../practice/presentation/practice_screen.dart';
 import '../../mock_tests/presentation/mock_screen.dart';
+import '../../practice/presentation/practice_screen.dart';
+import '../../profile/presentation/profile_screen.dart';
 
 class StudentShell extends ConsumerStatefulWidget {
   const StudentShell({super.key, required this.onChangeExam});
-
   final VoidCallback onChangeExam;
 
   @override
@@ -18,96 +20,56 @@ class StudentShell extends ConsumerStatefulWidget {
 
 class _StudentShellState extends ConsumerState<StudentShell> {
   int _index = 0;
-
   static const _titles = ['Home', 'Courses', 'Practice', 'Mock Tests', 'Profile'];
 
   @override
   Widget build(BuildContext context) {
     final exam = ref.watch(activeExamProvider);
+    if (exam == null) return const Scaffold(body: Center(child: Text('Choose an examination')));
     final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_index == 0 ? 'IqraVerse' : _titles[_index]),
-      ),
-      body: SafeArea(
-        child: _index == 1 && exam == Exam.nsct
-            ? const NsctCatalogScreen()
-            : _index == 2 && exam == Exam.nsct
-            ? const PracticeScreen()
-            : _index == 3 && exam != null
-            ? MockScreen(exam: exam)
-            : ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            if (_index == 0) ...[
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Chip(label: Text(exam?.label ?? 'No exam selected')),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Your learning journey',
-                style: theme.textTheme.headlineMedium,
-              ),
+    final records = ref.watch(historyProvider).where((r) => r.exam == exam).toList();
+    final total = records.fold<int>(0, (sum, r) => sum + r.total);
+    final hits = records.fold<int>(0, (sum, r) => sum + r.correct);
+    final pages = [
+      ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Align(alignment: Alignment.centerLeft, child: Chip(label: Text(exam.label))),
+          const SizedBox(height: 12),
+          Text('Your learning journey', style: theme.textTheme.headlineMedium),
+          const Text('Learn. Practice. Achieve.'),
+          const SizedBox(height: 20),
+          Card(child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Your practice progress', style: theme.textTheme.titleLarge),
+              const SizedBox(height: 12),
+              Text(total == 0 ? 'Start your first session' : '${(hits * 100 / total).round()}% accuracy'),
+              LinearProgressIndicator(value: total == 0 ? 0 : hits / total),
               const SizedBox(height: 8),
-              const Text('Learn. Practice. Achieve.'),
-              const SizedBox(height: 24),
-              Card(
-                color: theme.colorScheme.primaryContainer,
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ready to practice?',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: theme.colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      FilledButton(
-                        onPressed: () => setState(() => _index = 2),
-                        child: const Text('Start practice'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              for (final entry in [
-                (1, Icons.menu_book, 'Explore courses'),
-                (3, Icons.timer_outlined, 'Explore mock tests'),
-              ])
-                Card(
-                  child: ListTile(
-                    leading: Icon(entry.$2),
-                    title: Text(entry.$3),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => setState(() => _index = entry.$1),
-                  ),
-                ),
-            ] else if (_index == 4) ...[
-              const Text('Student profile — development preview'),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.school_outlined),
-                title: const Text('Change examination'),
-                subtitle: Text(exam?.label ?? 'Not selected'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: widget.onChangeExam,
-              ),
-            ] else ...[
-              Text(
-                exam?.label ?? 'Choose an examination',
-                style: theme.textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              const Text('This module is not connected yet.'),
-            ],
-          ],
-        ),
+              Text('${records.length} sessions · $total questions'),
+              TextButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => AnalyticsScreen(exam: exam))), child: const Text('View performance')),
+            ]),
+          )),
+          const SizedBox(height: 12),
+          FilledButton(onPressed: () => setState(() => _index = 2), child: const Text('Start practice')),
+          for (final entry in [(1, Icons.menu_book, 'Explore courses'), (3, Icons.timer_outlined, 'Explore mock tests')])
+            Card(child: ListTile(leading: Icon(entry.$2), title: Text(entry.$3), trailing: const Icon(Icons.chevron_right), onTap: () => setState(() => _index = entry.$1))),
+          const SizedBox(height: 12),
+          const Text('Development preview · local learning data only'),
+        ],
       ),
+      CoursesScreen(exam: exam),
+      PracticeScreen(key: ValueKey(exam), exam: exam),
+      MockScreen(exam: exam),
+      ProfileScreen(exam: exam, onChangeExam: widget.onChangeExam, onExit: () {
+        ref.read(historyProvider.notifier).clear();
+        context.go('/');
+      }),
+    ];
+    return Scaffold(
+      appBar: AppBar(title: Text(_index == 0 ? 'IqraVerse' : _titles[_index])),
+      body: SafeArea(child: IndexedStack(index: _index, children: pages)),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (index) => setState(() => _index = index),
