@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../exams/domain/exam.dart';
+import 'mock_preview_screen.dart';
 
 class MockScreen extends StatelessWidget {
   const MockScreen({super.key, required this.exam});
@@ -55,6 +56,11 @@ class MockScreen extends StatelessWidget {
           'This is not official proctoring.',
         ),
         const SizedBox(height: 24),
+        OutlinedButton(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => MockPreviewScreen(exam: exam))),
+          child: const Text('Try timed interface rehearsal'),
+        ),
+        const SizedBox(height: 12),
         const FilledButton(
           onPressed: null,
           child: Text('Start secure mock'),
