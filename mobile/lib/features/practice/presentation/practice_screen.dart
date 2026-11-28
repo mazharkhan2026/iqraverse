@@ -1,30 +1,33 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../../curriculum/domain/nsct_catalog.dart';
-import '../data/sample_questions.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../analytics/application/practice_history.dart';
+import '../../exams/domain/exam.dart';
+import '../../exams/domain/exam_content.dart';
 import '../domain/practice_question.dart';
 
 class PracticeScreen extends StatefulWidget {
-  const PracticeScreen({super.key});
+  const PracticeScreen({super.key, this.exam = Exam.nsct});
+
+  final Exam exam;
 
   @override
   State<PracticeScreen> createState() => _PracticeScreenState();
 }
 
 class _PracticeScreenState extends State<PracticeScreen> {
-  final _areas = Set<int>.from(
-    List<int>.generate(nsctCompetencies.length, (index) => index),
+  late final _areas = Set<int>.from(
+    List<int>.generate(examSubjects(widget.exam).length, (index) => index),
   );
   Difficulty? _difficulty;
-  int _count = 5;
+  late int _count = examQuestions(widget.exam).length.clamp(1, 5).toInt();
+
+  List<PracticeQuestion> get _matching => examQuestions(widget.exam).where((q) => _areas.contains(q.area) && (_difficulty == null || q.difficulty == _difficulty)).toList();
 
   @override
   Widget build(BuildContext context) {
-    final available = selectPracticeQuestions(
-      areas: _areas,
-      difficulty: _difficulty,
-      count: sampleQuestions.length,
-    ).length;
+    final available = _matching.length;
+    final subjects = examSubjects(widget.exam);
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -33,15 +36,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: 8),
-        const Text('NSCT sample bank · Untimed · Not official exam questions'),
+        Text('${widget.exam.label} sample bank · Untimed · Not official exam questions'),
         const SizedBox(height: 20),
         const Text('Competency areas'),
         Wrap(
           spacing: 8,
           children: [
-            for (var i = 0; i < nsctCompetencies.length; i++)
+            for (var i = 0; i < subjects.length; i++)
               FilterChip(
-                label: Text(nsctCompetencies[i].name),
+                label: Text(subjects[i]),
                 selected: _areas.contains(i),
                 onSelected: (selected) => setState(() {
                   if (selected) {
@@ -89,11 +92,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
               : () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => PracticeSessionScreen(
-                      questions: selectPracticeQuestions(
-                        areas: _areas,
-                        difficulty: _difficulty,
-                        count: _count,
-                      ),
+                      exam: widget.exam,
+                      questions: _matching.take(_count).toList(),
                     ),
                   ),
                 ),
@@ -106,16 +106,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 }
 
-class PracticeSessionScreen extends StatefulWidget {
-  const PracticeSessionScreen({super.key, required this.questions});
+class PracticeSessionScreen extends ConsumerStatefulWidget {
+  const PracticeSessionScreen({super.key, required this.questions, this.exam = Exam.nsct});
+
+  final Exam exam;
 
   final List<PracticeQuestion> questions;
 
   @override
-  State<PracticeSessionScreen> createState() => _PracticeSessionScreenState();
+  ConsumerState<PracticeSessionScreen> createState() => _PracticeSessionScreenState();
 }
 
-class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
+class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen> {
   final Map<int, int> _answers = {};
   int _index = 0;
   bool _finished = false;
@@ -207,6 +209,13 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
                   ? null
                   : () => setState(() {
                       if (_index + 1 == questions.length) {
+                        final areas = <int, (int, int)>{};
+                        for (var i = 0; i < questions.length; i++) {
+                          final q = questions[i];
+                          final old = areas[q.area] ?? (0, 0);
+                          areas[q.area] = (old.$1 + (_answers[i] == q.correctIndex ? 1 : 0), old.$2 + 1);
+                        }
+                        ref.read(historyProvider.notifier).add(PracticeRecord(widget.exam, practiceScore(questions, _answers), questions.length, Map.unmodifiable(areas), DateTime.now()));
                         _finished = true;
                       } else {
                         _index++;
