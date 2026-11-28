@@ -23,7 +23,7 @@ class CatalogRepository {
     final response = await _client.get<List<dynamic>>(
       'exams/variants/${Uri.encodeComponent(variantId)}/subjects',
       queryParameters: {
-        if (syllabusVersionId != null) 'syllabusVersionId': syllabusVersionId,
+        'syllabusVersionId': ?syllabusVersionId,
       },
       cancelToken: cancelToken,
     );
