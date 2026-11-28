@@ -110,6 +110,11 @@ class _AuthScreenState extends State<AuthScreen> {
                       validator: AuthValidation.password,
                       onFieldSubmitted: (_) => _submit(),
                     ),
+                    if (!register)
+                      TextButton(
+                        onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const RecoveryScreen())),
+                        child: const Text('Forgot password?'),
+                      ),
                     const SizedBox(height: 24),
                     FilledButton(
                       onPressed: _submit,
@@ -122,6 +127,44 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class RecoveryScreen extends StatefulWidget {
+  const RecoveryScreen({super.key});
+
+  @override
+  State<RecoveryScreen> createState() => _RecoveryScreenState();
+}
+
+class _RecoveryScreenState extends State<RecoveryScreen> {
+  final _key = GlobalKey<FormState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Password recovery')),
+      body: SafeArea(child: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          Text('Reset your password', style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 12),
+          const Text('Development preview. No recovery email will be sent.'),
+          const SizedBox(height: 24),
+          Form(key: _key, child: TextFormField(
+            decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+            keyboardType: TextInputType.emailAddress,
+            validator: AuthValidation.email,
+          )),
+          const SizedBox(height: 16),
+          FilledButton(onPressed: () {
+            if (_key.currentState?.validate() ?? false) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Recovery service is not connected.')));
+            }
+          }, child: const Text('Request reset')),
+        ],
+      )),
     );
   }
 }
