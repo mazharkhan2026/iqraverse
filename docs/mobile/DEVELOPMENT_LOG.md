@@ -67,3 +67,21 @@ Formatting is advisory until the baseline is stabilized. Action references use
 version tags and should be pinned to reviewed commit SHAs before release.
 Next: inspect CI results and fix failures; agree native session transport with
 backend developer; integrate one NSCT catalog/practice slice.
+
+## Milestone 03 — NSCT curriculum preview and networking (2026-11-28)
+
+- a9a7103: ten competency names and proposed mock quotas from blueprint v3.3 section 3A.
+- e56fd9b: competency list and detail view, explicitly unpublished preview.
+- e41caaf: unit test for ten unique areas and total quota of 100.
+- 8300e64: NSCT-only curriculum access within Courses.
+- 4832c3e: configurable Dio client with timeouts and API path validation.
+- 71b2afb: v3.3 catalog endpoints with optional syllabus edition and cancellation.
+
+Previous milestone CI run 46139897344 succeeded for revision 99daf13.
+Artifact 15261042840 contains the Android debug APK.
+New milestone build is not verified yet. Catalog data is local, not live;
+topic mapping, independent resources and course enrollment are not implemented.
+No official duration/count or question-bank publication claims.
+The client and repository are not wired to UI or authentication; real base
+URL, typed DTOs, session transport and backend integration remain pending.
+Only mobile branch and mobile documentation changed.
