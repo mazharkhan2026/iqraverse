@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/exams/application/exam_provider.dart';
 import '../../features/exams/presentation/exam_selection_screen.dart';
 import '../../features/home/presentation/student_shell.dart';
@@ -21,7 +22,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/',
         builder: (context, state) => WelcomeScreen(
           onContinue: () => context.go('/exams'),
+          onLogin: () => context.push('/login'),
+          onRegister: () => context.push('/register'),
         ),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const AuthScreen(register: false),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const AuthScreen(register: true),
       ),
       GoRoute(
         path: '/exams',
