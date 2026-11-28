@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../curriculum/presentation/nsct_catalog_screen.dart';
 import '../../exams/application/exam_provider.dart';
+import '../../exams/domain/exam.dart';
 
 class StudentShell extends ConsumerStatefulWidget {
   const StudentShell({super.key, required this.onChangeExam});
@@ -26,7 +28,9 @@ class _StudentShellState extends ConsumerState<StudentShell> {
         title: Text(_index == 0 ? 'IqraVerse' : _titles[_index]),
       ),
       body: SafeArea(
-        child: ListView(
+        child: _index == 1 && exam == Exam.nsct
+            ? const NsctCatalogScreen()
+            : ListView(
           padding: const EdgeInsets.all(20),
           children: [
             if (_index == 0) ...[
