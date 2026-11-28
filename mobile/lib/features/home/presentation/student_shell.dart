@@ -5,6 +5,7 @@ import '../../curriculum/presentation/nsct_catalog_screen.dart';
 import '../../exams/application/exam_provider.dart';
 import '../../exams/domain/exam.dart';
 import '../../practice/presentation/practice_screen.dart';
+import '../../mock_tests/presentation/mock_screen.dart';
 
 class StudentShell extends ConsumerStatefulWidget {
   const StudentShell({super.key, required this.onChangeExam});
@@ -33,6 +34,8 @@ class _StudentShellState extends ConsumerState<StudentShell> {
             ? const NsctCatalogScreen()
             : _index == 2 && exam == Exam.nsct
             ? const PracticeScreen()
+            : _index == 3 && exam != null
+            ? MockScreen(exam: exam)
             : ListView(
           padding: const EdgeInsets.all(20),
           children: [
